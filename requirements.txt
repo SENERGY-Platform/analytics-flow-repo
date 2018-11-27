@@ -1,0 +1,5 @@
+pymongo
+flask
+marshmallow_sqlalchemy
+flask_restplus
+flask_cors
