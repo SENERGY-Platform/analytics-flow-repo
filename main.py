@@ -61,8 +61,6 @@ flow_list = api.model('FlowList', {
 })
 
 
-
-
 ns = api.namespace('flow', description='Operations related to flows')
 
 
@@ -72,7 +70,7 @@ class Flow(Resource):
     @api.marshal_with(flow_return, code=201)
     def put(self):
         """Creates a flow."""
-        user_id = request.headers.get('X-UserID')
+        user_id = get_user_id(request)
         req = request.get_json()
         req['userId'] = user_id
         flow_id = flows.insert_one(req).inserted_id
@@ -100,7 +98,7 @@ class Flow(Resource):
         else:
             sort = ["name", "asc"]
 
-        user_id = request.headers.get('X-UserID')
+        user_id = get_user_id(request)
 
         if not (args["search"] is None):
             if len(args["search"]) > 0:
@@ -123,7 +121,7 @@ class FlowMethods(Resource):
     @api.marshal_with(flow_return)
     def get(self, flow_id):
         """Get a flow."""
-        user_id = request.headers.get('X-UserID')
+        user_id = get_user_id(request)
         f = flows.find_one({'$and': [{'_id': ObjectId(flow_id)}, {'userId': user_id}]})
         if f is not None:
             return f, 200
@@ -133,7 +131,7 @@ class FlowMethods(Resource):
     @api.marshal_with(flow_return)
     def post(self, flow_id):
         """Updates a flow."""
-        user_id = request.headers.get('X-UserID')
+        user_id = get_user_id(request)
         req = request.get_json()
         flow = flows.find_one_and_update({'$and': [{'_id': ObjectId(flow_id)}, {'userId': user_id}]}, {
             '$set': req,
@@ -146,13 +144,20 @@ class FlowMethods(Resource):
     @api.response(204, "Deleted")
     def delete(self, flow_id):
         """Deletes a flow."""
-        user_id = request.headers.get('X-UserID')
+        user_id = get_user_id(request)
         f = flows.find_one({'$and': [{'_id': ObjectId(flow_id)}, {'userId': user_id}]})
         print(f)
         if f is not None:
             flows.delete_one({'_id': ObjectId(flow_id)})
             return "Deleted", 204
         return "Flow not found", 404
+
+
+def get_user_id(req):
+    user_id = req.headers.get('X-UserID')
+    if user_id is None:
+        user_id = os.getenv('DUMMY_USER', 'admin')
+    return user_id
 
 
 if __name__ == "__main__":
