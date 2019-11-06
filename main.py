@@ -49,6 +49,7 @@ model = api.model('Model', {
 flow_model = api.model('Flow', {
     'name': fields.String(required=True, description='Flow name'),
     'model': fields.Nested(model),
+    'image': fields.String(required=False, description='Flow image'),
 })
 
 flow_return = flow_model.clone('Flow', {
