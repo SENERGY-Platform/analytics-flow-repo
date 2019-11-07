@@ -48,6 +48,7 @@ model = api.model('Model', {
 
 flow_model = api.model('Flow', {
     'name': fields.String(required=True, description='Flow name'),
+    'description': fields.String(required=True, description='Flow description'),
     'model': fields.Nested(model),
     'image': fields.String(required=False, description='Flow image'),
 })
