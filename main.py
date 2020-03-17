@@ -16,7 +16,7 @@ import os
 
 from bson.objectid import ObjectId
 from flask import Flask, request
-from flask_restplus import Api, Resource, fields, reqparse
+from flask_restx import Api, Resource, fields, reqparse
 from flask_cors import CORS
 import json
 from pymongo import MongoClient, ReturnDocument, ASCENDING, DESCENDING
