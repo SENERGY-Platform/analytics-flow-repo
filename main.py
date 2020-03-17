@@ -11,12 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import datetime
 import os
 
 from bson.objectid import ObjectId
 from flask import Flask, request
-from flask_restplus import Api, Resource, fields,reqparse
+from flask_restplus import Api, Resource, fields, reqparse
 from flask_cors import CORS
 import json
 from pymongo import MongoClient, ReturnDocument, ASCENDING, DESCENDING
@@ -50,12 +50,14 @@ flow_model = api.model('Flow', {
     'name': fields.String(required=True, description='Flow name'),
     'description': fields.String(required=True, description='Flow description'),
     'model': fields.Nested(model),
-    'image': fields.String(required=False, description='Flow image'),
+    'image': fields.String(required=False, description='Flow image')
 })
 
 flow_return = flow_model.clone('Flow', {
     'userId': fields.String,
     '_id': fields.String(required=True, description='Flow id'),
+    'dateCreated': fields.DateTime,
+    'dateUpdated': fields.DateTime
 })
 
 flow_list = api.model('FlowList', {
@@ -75,6 +77,8 @@ class Flow(Resource):
         user_id = get_user_id(request)
         req = request.get_json()
         req['userId'] = user_id
+        req['dateCreated'] = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
+        req['dateUpdated'] = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
         flow_id = flows.insert_one(req).inserted_id
         f = flows.find_one({'_id': flow_id})
         print("Added flow: " + json.dumps({"_id": str(flow_id)}))
@@ -135,6 +139,7 @@ class FlowMethods(Resource):
         """Updates a flow."""
         user_id = get_user_id(request)
         req = request.get_json()
+        req['dateUpdated'] = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
         flow = flows.find_one_and_update({'$and': [{'_id': ObjectId(flow_id)}, {'userId': user_id}]}, {
             '$set': req,
         },

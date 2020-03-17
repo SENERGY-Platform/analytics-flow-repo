@@ -1,5 +1,5 @@
 pymongo
 flask
 marshmallow_sqlalchemy
-flask_restplus
+flask-restx
 flask_cors
