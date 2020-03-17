@@ -3,3 +3,4 @@ flask
 marshmallow_sqlalchemy
 flask-restx
 flask_cors
+werkzeug<=0.16.1
