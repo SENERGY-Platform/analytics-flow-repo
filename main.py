@@ -19,6 +19,7 @@ from flask import Flask, request
 from flask_restx import Api, Resource, fields, reqparse
 from flask_cors import CORS
 import json
+import jwt
 from pymongo import MongoClient, ReturnDocument, ASCENDING, DESCENDING
 
 app = Flask("analytics-flow-repo")
@@ -159,6 +160,8 @@ class FlowMethods(Resource):
 
 def get_user_id(req):
     user_id = req.headers.get('X-UserID')
+    if user_id is None:
+        user_id = jwt.decode(req.headers.get('Authorization')[7:], verify=False)['sub']
     if user_id is None:
         user_id = os.getenv('DUMMY_USER', 'admin')
     return user_id
