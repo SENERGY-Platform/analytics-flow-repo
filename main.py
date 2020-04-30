@@ -66,8 +66,19 @@ flow_return = flow_model.clone('Flow', {
     'dateUpdated': fields.DateTime
 })
 
+flow_list_item = api.model('Flow', {
+    'name': fields.String(required=True, description='Flow name'),
+    'description': fields.String(required=True, description='Flow description'),
+    'image': fields.String(required=False, description='Flow image'),
+    'share': fields.Nested(share),
+    'userId': fields.String,
+    '_id': fields.String(required=True, description='Flow id'),
+    'dateCreated': fields.DateTime,
+    'dateUpdated': fields.DateTime
+})
+
 flow_list = api.model('FlowList', {
-    "flows": fields.List(fields.Nested(flow_return))
+    "flows": fields.List(fields.Nested(flow_list_item))
 })
 
 ns = api.namespace('flow', description='Operations related to flows')
@@ -113,11 +124,12 @@ class Flow(Resource):
 
         if not (args["search"] is None):
             if len(args["search"]) > 0:
-                fs = flows.find({'$and': [{'name': {"$regex": args["search"]}}, {'userId': user_id}]}) \
+                fs = flows.find({'$and': [{'name': {"$regex": args["search"]}},
+                                          {'$or': [{'userId': user_id}, {'share.list': True}]}]}) \
                     .skip(offset).limit(limit) \
                     .sort("_id", 1).sort(sort[0], ASCENDING if sort[1] == "asc" else DESCENDING)
         else:
-            fs = flows.find({'userId': user_id}) \
+            fs = flows.find({'$or': [{'userId': user_id}, {'share.list': True}]}) \
                 .skip(offset).limit(limit).sort(sort[0], ASCENDING if sort[1] == "asc" else DESCENDING)
         flows_list = []
         for f in fs:
@@ -133,7 +145,7 @@ class FlowMethods(Resource):
     def get(self, flow_id):
         """Get a flow."""
         user_id = get_user_id(request)
-        f = flows.find_one({'$and': [{'_id': ObjectId(flow_id)}, {'userId': user_id}]})
+        f = flows.find_one({'$and': [{'_id': ObjectId(flow_id)}, {'$or': [{'userId': user_id}, {'share.read': True}]}]})
         if f is not None:
             return f, 200
         return "Flow not found", 404
@@ -145,7 +157,8 @@ class FlowMethods(Resource):
         user_id = get_user_id(request)
         req = request.get_json()
         req['dateUpdated'] = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
-        flow = flows.find_one_and_update({'$and': [{'_id': ObjectId(flow_id)}, {'userId': user_id}]}, {
+        flow = flows.find_one_and_update({'$and': [{'_id': ObjectId(flow_id)},
+                                                   {'$or': [{'userId': user_id}, {'share.write': True}]}]}, {
             '$set': req,
         },
                                          return_document=ReturnDocument.AFTER)
@@ -180,4 +193,5 @@ if bool(os.getenv('DEBUG', '')):
 else:
     if __name__ == "__main__":
         from waitress import serve
+
         serve(app, host="0.0.0.0", port=5000)
