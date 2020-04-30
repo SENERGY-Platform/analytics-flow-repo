@@ -21,7 +21,6 @@ from flask_cors import CORS
 import json
 from pymongo import MongoClient, ReturnDocument, ASCENDING, DESCENDING
 
-
 app = Flask("analytics-flow-repo")
 app.config.SWAGGER_UI_DOC_EXPANSION = 'list'
 CORS(app)
@@ -40,7 +39,6 @@ client = MongoClient(os.getenv('MONGO_ADDR', 'localhost'), os.getenv('MONGO_PORT
 db = client.flow_database
 
 flows = db.flows
-
 
 model = api.model('Model', {
     'cells': fields.Raw,
@@ -63,7 +61,6 @@ flow_return = flow_model.clone('Flow', {
 flow_list = api.model('FlowList', {
     "flows": fields.List(fields.Nested(flow_return))
 })
-
 
 ns = api.namespace('flow', description='Operations related to flows')
 
@@ -108,11 +105,11 @@ class Flow(Resource):
 
         if not (args["search"] is None):
             if len(args["search"]) > 0:
-                fs = flows.find({'$and': [{'name': {"$regex": args["search"]}}, {'userId': user_id}]})\
-                    .skip(offset).limit(limit)\
+                fs = flows.find({'$and': [{'name': {"$regex": args["search"]}}, {'userId': user_id}]}) \
+                    .skip(offset).limit(limit) \
                     .sort("_id", 1).sort(sort[0], ASCENDING if sort[1] == "asc" else DESCENDING)
         else:
-            fs = flows.find({'userId': user_id})\
+            fs = flows.find({'userId': user_id}) \
                 .skip(offset).limit(limit).sort(sort[0], ASCENDING if sort[1] == "asc" else DESCENDING)
         flows_list = []
         for f in fs:
@@ -143,7 +140,7 @@ class FlowMethods(Resource):
         flow = flows.find_one_and_update({'$and': [{'_id': ObjectId(flow_id)}, {'userId': user_id}]}, {
             '$set': req,
         },
-            return_document=ReturnDocument.AFTER)
+                                         return_document=ReturnDocument.AFTER)
         if flow is not None:
             return flow, 200
         return "Flow not found", 404
@@ -167,6 +164,10 @@ def get_user_id(req):
     return user_id
 
 
-if __name__ == "__main__":
-    from waitress import serve
-    serve(app, host="0.0.0.0", port=5000)
+if bool(os.getenv('DEBUG', '')):
+    if __name__ == "__main__":
+        app.run("0.0.0.0", 5000, debug=False)
+else:
+    if __name__ == "__main__":
+        from waitress import serve
+        serve(app, host="0.0.0.0", port=5000)
