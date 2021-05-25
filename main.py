@@ -181,7 +181,8 @@ class FlowMethods(Resource):
 def get_user_id(req):
     user_id = req.headers.get('X-UserID')
     if user_id is None:
-        user_id = jwt.decode(req.headers.get('Authorization')[7:], verify=False)['sub']
+        print(req.headers.get('Authorization'))
+        user_id = jwt.decode(req.headers.get('Authorization')[7:], options={"verify_signature": False})['sub']
     if user_id is None:
         user_id = os.getenv('DUMMY_USER', 'admin')
     return user_id
@@ -189,7 +190,7 @@ def get_user_id(req):
 
 if bool(os.getenv('DEBUG', '')):
     if __name__ == "__main__":
-        app.run("0.0.0.0", 5000, debug=False)
+        app.run("127.0.0.1", 5000, debug=False)
 else:
     if __name__ == "__main__":
         from waitress import serve
