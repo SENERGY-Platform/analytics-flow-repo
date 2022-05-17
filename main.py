@@ -12,6 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 import datetime
+import distutils.util
 import os
 
 from bson.objectid import ObjectId
@@ -108,8 +109,10 @@ class Flow(Resource):
         parser.add_argument('limit', type=int, help='Limit', location='args')
         parser.add_argument('offset', type=int, help='Offset', location='args')
         parser.add_argument('sort', type=str, help='Sort', location='args')
+        parser.add_argument('shared', type=str, help='Shared', location='args')
         args = parser.parse_args()
         limit = 0
+        shared = True
         if not (args["limit"] is None):
             limit = args["limit"]
         offset = 0
@@ -119,17 +122,18 @@ class Flow(Resource):
             sort = args["sort"].split(":")
         else:
             sort = ["name", "asc"]
-
+        if not (args["shared"] is None):
+            shared = bool(distutils.util.strtobool(args["shared"]))
         user_id = get_user_id(request)
 
         if not (args["search"] is None):
             if len(args["search"]) > 0:
                 fs = flows.find({'$and': [{'name': {"$regex": args["search"]}},
-                                          {'$or': [{'userId': user_id}, {'share.list': True}]}]}) \
+                                          {'$or': [{'userId': user_id}, {'share.list': shared}]}]}) \
                     .skip(offset).limit(limit) \
                     .sort("_id", 1).sort(sort[0], ASCENDING if sort[1] == "asc" else DESCENDING)
         else:
-            fs = flows.find({'$or': [{'userId': user_id}, {'share.list': True}]}) \
+            fs = flows.find({'$or': [{'userId': user_id}, {'share.list': shared}]}) \
                 .skip(offset).limit(limit).sort(sort[0], ASCENDING if sort[1] == "asc" else DESCENDING)
         flows_list = []
         for f in fs:
@@ -190,7 +194,7 @@ def get_user_id(req):
 
 if bool(os.getenv('DEBUG', '')):
     if __name__ == "__main__":
-        app.run("127.0.0.1", 5000, debug=False)
+        app.run("127.0.0.1", 5000, debug=True)
 else:
     if __name__ == "__main__":
         from waitress import serve
