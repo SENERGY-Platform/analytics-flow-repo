@@ -125,15 +125,18 @@ class Flow(Resource):
         if not (args["shared"] is None):
             shared = bool(distutils.util.strtobool(args["shared"]))
         user_id = get_user_id(request)
+        lookup = {'$or': [{'userId': user_id}, {'share.list': shared}]}
+        if not shared:
+            lookup = {'userId': user_id}
 
         if not (args["search"] is None):
             if len(args["search"]) > 0:
                 fs = flows.find({'$and': [{'name': {"$regex": args["search"]}},
-                                          {'$or': [{'userId': user_id}, {'share.list': shared}]}]}) \
+                                          lookup]}) \
                     .skip(offset).limit(limit) \
                     .sort("_id", 1).sort(sort[0], ASCENDING if sort[1] == "asc" else DESCENDING)
         else:
-            fs = flows.find({'$or': [{'userId': user_id}, {'share.list': shared}]}) \
+            fs = flows.find(lookup) \
                 .skip(offset).limit(limit).sort(sort[0], ASCENDING if sort[1] == "asc" else DESCENDING)
         flows_list = []
         for f in fs:
