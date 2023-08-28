@@ -1,9 +1,9 @@
-markupsafe==2.0.1
 PyJWT
 waitress
 pymongo
 flask
 marshmallow_sqlalchemy
-flask-restx
 flask_cors
-werkzeug<=0.16.1
+flask==2.3.0
+flask_restx==1.1.0
+requests
