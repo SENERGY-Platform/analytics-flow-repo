@@ -23,6 +23,8 @@ import json
 import jwt
 from pymongo import MongoClient, ReturnDocument, ASCENDING, DESCENDING
 
+from operators import get_operator
+
 app = Flask("analytics-flow-repo")
 app.config.SWAGGER_UI_DOC_EXPANSION = 'list'
 CORS(app)
@@ -93,6 +95,9 @@ class Flow(Resource):
         """Creates a flow."""
         user_id = get_user_id(request)
         req = request.get_json()
+        code = fill_operator_info(req, user_id)
+        if code != 200:
+            return None, code
         req['userId'] = user_id
         req['dateCreated'] = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
         req['dateUpdated'] = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
@@ -163,6 +168,9 @@ class FlowMethods(Resource):
         """Updates a flow."""
         user_id = get_user_id(request)
         req = request.get_json()
+        code = fill_operator_info(req, user_id)
+        if code != 200:
+            return "error", code
         req['dateUpdated'] = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
         flow = flows.find_one_and_update({'$and': [{'_id': ObjectId(flow_id)},
                                                    {'$or': [{'userId': user_id}, {'share.write': True}]}]}, {
@@ -194,6 +202,29 @@ def get_user_id(req):
         user_id = os.getenv('DUMMY_USER', 'admin')
     return user_id
 
+
+def fill_operator_info(flow, user_id) -> int :
+    if "model" not in flow:
+        return 400
+    model = flow["model"]
+    if "cells" not in model:
+        return 400
+    cells = model["cells"]
+    for cell in cells:
+        if "type" not in cell:
+            return 400
+        if cell["type"] != "senergy.NodeElement":
+            continue
+        if "operatorId" not in cell:
+            return 400
+        operator, code = get_operator(cell["operatorId"], user_id)
+        if code != 200:
+            return code
+        cell["name"] = operator["name"]
+        cell["image"] = operator["image"]
+        cell["deploymentType"] = operator["deploymentType"]
+        cell["cost"] = operator["cost"]
+    return 200
 
 if bool(os.getenv('DEBUG', '')):
     if __name__ == "__main__":
