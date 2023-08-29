@@ -223,7 +223,10 @@ def fill_operator_info(flow, user_id) -> int :
         cell["name"] = operator["name"]
         cell["image"] = operator["image"]
         cell["deploymentType"] = operator["deploymentType"]
-        cell["cost"] = operator["cost"]
+        if "cost" in operator:
+            cell["cost"] = operator["cost"]
+        else:
+            cell["cost"] = 0
     return 200
 
 if bool(os.getenv('DEBUG', '')):
