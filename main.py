@@ -231,7 +231,7 @@ def fill_operator_info(flow, user_id) -> int :
 
 if bool(os.getenv('DEBUG', '')):
     if __name__ == "__main__":
-        app.run("127.0.0.1", 5000, debug=True)
+        app.run("0.0.0.0", 5000, debug=True)
 else:
     if __name__ == "__main__":
         from waitress import serve

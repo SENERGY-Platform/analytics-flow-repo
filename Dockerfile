@@ -13,4 +13,4 @@ EXPOSE 5000
 
 LABEL org.opencontainers.image.source https://github.com/SENERGY-Platform/analytics-flow-repo
 
-CMD [ "python", "./main.py" ]
+CMD [ "python", "-u", "./main.py" ]
