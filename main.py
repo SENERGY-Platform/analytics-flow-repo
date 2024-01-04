@@ -186,7 +186,6 @@ class FlowMethods(Resource):
         """Deletes a flow."""
         user_id = get_user_id(request)
         f = flows.find_one({'$and': [{'_id': ObjectId(flow_id)}, {'userId': user_id}]})
-        print(f)
         if f is not None:
             flows.delete_one({'_id': ObjectId(flow_id)})
             return "Deleted", 204
@@ -196,7 +195,6 @@ class FlowMethods(Resource):
 def get_user_id(req):
     user_id = req.headers.get('X-UserID')
     if user_id is None:
-        print(req.headers.get('Authorization'))
         user_id = jwt.decode(req.headers.get('Authorization')[7:], options={"verify_signature": False})['sub']
     if user_id is None:
         user_id = os.getenv('DUMMY_USER', 'admin')
