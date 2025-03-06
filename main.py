@@ -95,7 +95,7 @@ class Flow(Resource):
         """Creates a flow."""
         user_id = get_user_id(request)
         req = request.get_json()
-        code = fill_operator_info(req, user_id)
+        code = fill_operator_info(req, user_id, request.headers.get('Authorization'))
         if code != 200:
             return None, code
         req['userId'] = user_id
@@ -168,7 +168,7 @@ class FlowMethods(Resource):
         """Updates a flow."""
         user_id = get_user_id(request)
         req = request.get_json()
-        code = fill_operator_info(req, user_id)
+        code = fill_operator_info(req, user_id, request.headers.get('Authorization'))
         if code != 200:
             return "error", code
         req['dateUpdated'] = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
@@ -200,8 +200,7 @@ def get_user_id(req):
         user_id = os.getenv('DUMMY_USER', 'admin')
     return user_id
 
-
-def fill_operator_info(flow, user_id) -> int :
+def fill_operator_info(flow, user_id, auth_token = "") -> int :
     if "model" not in flow:
         return 400
     model = flow["model"]
@@ -215,7 +214,7 @@ def fill_operator_info(flow, user_id) -> int :
             continue
         if "operatorId" not in cell:
             return 400
-        operator, code = get_operator(cell["operatorId"], user_id)
+        operator, code = get_operator(cell["operatorId"], user_id, auth_token)
         if code != 200:
             return code
         cell["name"] = operator["name"]

@@ -1,5 +1,3 @@
-version: "2"
-
 services:
   repo:
     build: .
@@ -8,6 +6,6 @@ services:
     links:
      - db
   db:
-    image: mongo
+    image: mongo:4
     ports:
      - "27017:27017"

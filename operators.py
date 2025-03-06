@@ -17,6 +17,7 @@ import os
 import typing
 
 import requests
+from werkzeug.datastructures import Authorization
 
 url = os.getenv('OPERATOR_REPO_URL', 'localhost')
 
@@ -38,9 +39,9 @@ class Operator(typing.TypedDict, total=False):
     config_values: typing.List[OperatorIO]
 
 
-def get_operator(operator_id: str, user_id: str) -> typing.Tuple[typing.Optional[Operator], int]:
+def get_operator(operator_id: str, user_id: str, auth_token: str = "") -> typing.Tuple[typing.Optional[Operator], int]:
     try:
-        resp = requests.get(url + '/operator/' + operator_id, timeout=10, headers={'X-UserID' : user_id})
+        resp = requests.get(url + '/operator/' + operator_id, timeout=10, headers={'X-UserID' : user_id, 'Authorization' : auth_token})
     except requests.exceptions.RequestException as e:
         print(f"Error fetching operator {operator_id} for user {user_id} with exception {e}")
         return None, 502
